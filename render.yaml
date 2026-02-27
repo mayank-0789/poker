@@ -1,0 +1,77 @@
+# Render Blueprint — deploy all 4 services from one repo
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  # ── Backend API (Hono + Bun) ──
+  - type: web
+    name: poker-backend
+    runtime: docker
+    dockerfilePath: ./apps/backend/Dockerfile
+    dockerContext: .
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: PORT
+        value: "3000"
+
+  # ── WebSocket Server (Bun) ──
+  - type: web
+    name: poker-websocket
+    runtime: docker
+    dockerfilePath: ./apps/websocket/Dockerfile
+    dockerContext: .
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: WS_PORT
+        value: "3001"
+      - key: PORT
+        value: "3000"
+      - key: ENABLE_BOTS
+        value: "true"
+      - key: BOT_COUNT
+        value: "4"
+      - key: BOT_TABLE_NAME
+        value: "Bot Arena"
+      - key: BOT_SMALL_BLIND
+        value: "50"
+      - key: BOT_BIG_BLIND
+        value: "100"
+      - key: BOT_BUY_IN
+        value: "5000"
+
+  # ── User Frontend (Vite Static Site) ──
+  - type: web
+    name: poker-user-frontend
+    runtime: static
+    buildCommand: cd ../.. && bun install && cd apps/user-frontend && bun run build
+    staticPublishPath: ./apps/user-frontend/dist
+    rootDir: .
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_WS_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  # ── Admin Frontend (Vite Static Site) ──
+  - type: web
+    name: poker-admin-frontend
+    runtime: static
+    buildCommand: cd ../.. && bun install && cd apps/admin-frontend && bun run build
+    staticPublishPath: ./apps/admin-frontend/dist
+    rootDir: .
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
