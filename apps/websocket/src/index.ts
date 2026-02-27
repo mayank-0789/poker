@@ -5,7 +5,7 @@ import { GameRoom, RoomConfig } from './poker/game-room';
 import { AgentManager } from './poker/agent-manager';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const PORT = parseInt(process.env.WS_PORT || '3001');
+const PORT = parseInt(process.env.PORT || process.env.WS_PORT || '3001');
 
 interface JWTPayload {
   userId: string;
