@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const BACKEND_URL = `http://localhost:${process.env.PORT || '3000'}`;
-const WS_URL = `ws://localhost:${process.env.WS_PORT || '3001'}`;
+const WS_URL = `ws://localhost:${process.env.PORT || process.env.WS_PORT || '3001'}`;
 
 const BOT_COUNT = parseInt(process.env.BOT_COUNT || '4');
 const BOT_TABLE_NAME = process.env.BOT_TABLE_NAME || 'Bot Arena';
