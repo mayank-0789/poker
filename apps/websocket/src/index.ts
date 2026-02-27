@@ -453,8 +453,32 @@ function handleDisconnect(ws: WebSocket): void {
   connections.delete(ws);
 }
 
-// Create WebSocket server
-const wss = new WebSocketServer({ port: PORT });
+// Create HTTP server for health checks (Render requires this)
+import { createServer } from 'http';
+
+const server = createServer((req, res) => {
+  if (req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok', connections: connections.size, rooms: gameRooms.size }));
+  } else {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Poker WebSocket Server');
+  }
+});
+
+// Attach WebSocket server to the HTTP server
+const wss = new WebSocketServer({ server });
+
+let agentManager: AgentManager | null = null;
+let botsStarting = false;
+
+async function ensureBotsRunning(): Promise<void> {
+  if (agentManager || botsStarting || process.env.ENABLE_BOTS === 'false') return;
+  botsStarting = true;
+  console.log('[AgentManager] Starting bots (triggered by first connection)...');
+  agentManager = new AgentManager();
+  await agentManager.start().catch(err => console.error('[AgentManager] Failed:', err));
+}
 
 wss.on('connection', (ws: WebSocket) => {
   console.log('New WebSocket connection');
@@ -463,6 +487,9 @@ wss.on('connection', (ws: WebSocket) => {
     user: null,
     roomId: null,
   });
+
+  // Start bots on first connection (lazy init)
+  ensureBotsRunning();
 
   ws.on('message', (data) => {
     handleMessage(ws, data.toString());
@@ -480,13 +507,7 @@ wss.on('connection', (ws: WebSocket) => {
 
 // Load existing rooms on startup
 loadRooms().then(() => {
-  console.log(`WebSocket server running on port ${PORT}`);
-
-  // Start autonomous bot agents after a brief delay
-  if (process.env.ENABLE_BOTS !== 'false') {
-    setTimeout(() => {
-      const manager = new AgentManager();
-      manager.start().catch(err => console.error('[AgentManager] Failed:', err));
-    }, 3000);
-  }
+  server.listen(PORT, () => {
+    console.log(`WebSocket server running on port ${PORT}`);
+  });
 });
