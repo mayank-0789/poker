@@ -12,11 +12,13 @@
     "@poker/db": "workspace:*",
     "@poker/types": "workspace:*",
     "ws": "^8.18.0",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
     "@types/ws": "^8.5.12",
     "@types/jsonwebtoken": "^9.0.6",
+    "@types/bcryptjs": "^2.4.6",
     "typescript": "^5.3.3"
   }
 }

@@ -2,6 +2,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import jwt from 'jsonwebtoken';
 import { db, rooms, tablePlayers, users, eq, and } from '@poker/db';
 import { GameRoom, RoomConfig } from './poker/game-room';
+import { AgentManager } from './poker/agent-manager';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const PORT = parseInt(process.env.WS_PORT || '3001');
@@ -480,4 +481,12 @@ wss.on('connection', (ws: WebSocket) => {
 // Load existing rooms on startup
 loadRooms().then(() => {
   console.log(`WebSocket server running on port ${PORT}`);
+
+  // Start autonomous bot agents after a brief delay
+  if (process.env.ENABLE_BOTS !== 'false') {
+    setTimeout(() => {
+      const manager = new AgentManager();
+      manager.start().catch(err => console.error('[AgentManager] Failed:', err));
+    }, 3000);
+  }
 });
